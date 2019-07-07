@@ -7,6 +7,15 @@ export const environment = {
   mapbox: {
     accessToken:
       "pk.eyJ1IjoiY291bnRyZWRjbGF3IiwiYSI6ImNqd2t1cWVoazB4aW00Nm42ZGxmZ3JxNHAifQ.c0trfpPdYr2NFGIKWtp1tQ"
+  },
+  firebase: {
+    apiKey: "AIzaSyBrwjjv5OFDBLzUwzkpARP1t78FYvgaaZ0",
+    authDomain: "fir-test-aeb2c.firebaseapp.com",
+    databaseURL: "https://fir-test-aeb2c.firebaseio.com",
+    projectId: "fir-test-aeb2c",
+    storageBucket: "fir-test-aeb2c.appspot.com",
+    messagingSenderId: "45095595806",
+    appId: "1:45095595806:web:865b26811b259962"
   }
 };
 

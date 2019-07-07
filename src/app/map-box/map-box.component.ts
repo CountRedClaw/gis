@@ -1,6 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import * as mapboxgl from "mapbox-gl";
 import { MapService } from "../map.service";
+import { GeoJson, FeatureCollection } from "../map";
+import { AngularFireDatabase, AngularFireList } from "@angular/fire/database";
 
 @Component({
   selector: "app-map-box",
@@ -16,11 +18,31 @@ export class MapBoxComponent implements OnInit {
 
   // data
   source: any;
-  markers: any;
+  markers: any = [];
 
-  constructor(private mapService: MapService) {}
+  constructor(
+    private mapService: MapService,
+    private db: AngularFireDatabase
+  ) {}
 
   ngOnInit() {
+    this.markers = this.mapService
+      .getMarkers()
+      .valueChanges()
+      .subscribe(markers => {
+        this.markers = markers;
+        console.log(markers);
+      });
+    console.log(this.markers);
+
+    // this.db
+    //   .list("/markers")
+    //   .valueChanges()
+    //   .subscribe(markers => {
+    //     this.markers = markers;
+    //     console.log(this.markers);
+    //   });
+
     this.initializeMap();
   }
 
@@ -30,9 +52,9 @@ export class MapBoxComponent implements OnInit {
       navigator.geolocation.getCurrentPosition(position => {
         this.lat = position.coords.latitude;
         this.lng = position.coords.longitude;
-        // this.map.flyTo({
-        //   center: [this.lng, this.lat]
-        // });
+        this.map.flyTo({
+          center: [this.lng, this.lat]
+        });
       });
     }
 
@@ -53,8 +75,8 @@ export class MapBoxComponent implements OnInit {
     //// Add Marker on Click
     this.map.on("click", event => {
       const coordinates = [event.lngLat.lng, event.lngLat.lat];
-      // const newMarker   = new GeoJson(coordinates, { message: this.message })
-      // this.mapService.createMarker(newMarker)
+      const newMarker = new GeoJson(coordinates, { message: this.message });
+      this.mapService.createMarker(newMarker);
     });
 
     /// Add realtime firebase data on map load
@@ -69,32 +91,44 @@ export class MapBoxComponent implements OnInit {
       });
 
       /// get source
-      // this.source = this.map.getSource("firebase");
+      this.source = this.map.getSource("firebase");
 
-      /// subscribe to realtime database and set data source
-      // this.markers.subscribe(markers => {
-      //   // let data = new FeatureCollection(markers)
-      //   // this.source.setData(data)
-      // });
+      // subscribe to realtime database and set data source
+      this.markers.valueChanges().subscribe(markers => {
+        let data = new FeatureCollection(markers);
+        this.source.setData(data);
+      });
 
       /// create map layers with realtime data
-      // this.map.addLayer({
-      //   id: "firebase",
-      //   source: "firebase",
-      //   type: "symbol",
-      //   layout: {
-      //     "text-field": "{message}",
-      //     "text-size": 24,
-      //     "text-transform": "uppercase",
-      //     "icon-image": "rocket-15",
-      //     "text-offset": [0, 1.5]
-      //   },
-      //   paint: {
-      //     "text-color": "#f16624",
-      //     "text-halo-color": "#fff",
-      //     "text-halo-width": 2
-      //   }
-      // });
+      this.map.addLayer({
+        id: "firebase",
+        source: "firebase",
+        type: "symbol",
+        layout: {
+          "text-field": "{message}",
+          "text-size": 24,
+          "text-transform": "uppercase",
+          "icon-image": "rocket-15",
+          "text-offset": [0, 1.5]
+        },
+        paint: {
+          "text-color": "#f16624",
+          "text-halo-color": "#fff",
+          "text-halo-width": 2
+        }
+      });
+    });
+  }
+
+  /// Helpers
+
+  removeMarker(marker) {
+    this.mapService.removeMarker(marker.$key);
+  }
+
+  flyTo(data: GeoJson) {
+    this.map.flyTo({
+      center: data.geometry.coordinates
     });
   }
 }
